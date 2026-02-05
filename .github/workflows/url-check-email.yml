@@ -36,7 +36,7 @@ jobs:
 
       - name: Check URL
         run: |
-          URL="https://enia-spitefire-uat.ogondigital.com"
+          URL="https://test.com"
           STATUS=$(curl -o /dev/null -s -w "%{http_code}" --connect-timeout 10 "$URL")
 
           echo "HTTP Status: $STATUS"
