@@ -17,6 +17,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y msmtp mailutils
+          # 🔴 CRITICAL FIX: link msmtp as sendmail
+          sudo ln -sf /usr/bin/msmtp /usr/sbin/sendmail
 
       # -------------------------
       # 2. Configure msmtp
@@ -81,8 +83,10 @@ jobs:
           " | mail -s "🚨 URL Down Alert" ${{ secrets.MAIL_TO }}
 
       # -------------------------
-      # 5. Debug (optional)
+      # 5. Debug (optional but useful)
       # -------------------------
       - name: Debug status
         run: |
           echo "Final URL_DOWN value = $URL_DOWN"
+          echo "---- msmtp log ----"
+          cat ~/.msmtp.log || true
