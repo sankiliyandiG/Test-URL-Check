@@ -1,20 +1,26 @@
-name: URL Health Check (Send From My Email)
+name: URL Health Check
 
 on:
-  schedule:
-    - cron: "*/5 * * * *"
   workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"   # every 5 minutes
 
 jobs:
   check-url:
     runs-on: ubuntu-latest
 
     steps:
+      # -------------------------
+      # 1. Install mail tools
+      # -------------------------
       - name: Install mail tools
         run: |
-          # sudo apt-get update 
+          sudo apt-get update
           sudo apt-get install -y msmtp mailutils
 
+      # -------------------------
+      # 2. Configure msmtp
+      # -------------------------
       - name: Configure msmtp
         run: |
           cat <<EOF > ~/.msmtprc
@@ -34,30 +40,49 @@ jobs:
 
           chmod 600 ~/.msmtprc
 
+      # -------------------------
+      # 3. Check URL (SAFE LOGIC)
+      # -------------------------
       - name: Check URL
         run: |
           URL="https://test.com"
 
-          STATUS=$(curl -o /dev/null -s -w "%{http_code}" \
-          --connect-timeout 10 "$URL" || echo "000")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            --connect-timeout 10 "$URL" || true)
+
+          # Normalize curl failures
+          if [ -z "$STATUS" ] || [ "$STATUS" = "000" ]; then
+            STATUS="DOWN"
+          fi
 
           echo "HTTP Status: $STATUS"
 
-          if [ "$STATUS" = "000" ] || [ "$STATUS" -ge 400 ]; then
+          if [ "$STATUS" = "DOWN" ] || [ "$STATUS" -ge 400 ]; then
             echo "URL_DOWN=true" >> $GITHUB_ENV
           else
             echo "URL_DOWN=false" >> $GITHUB_ENV
           fi
 
+      # -------------------------
+      # 4. Send Email if URL is Down
+      # -------------------------
       - name: Send mail if URL is down
-        if: env.URL_DOWN == 'true'
+        if: always() && env.URL_DOWN == 'true'
         run: |
-          echo "🚨 ALERT 🚨
+          echo "🚨 URL DOWN ALERT 🚨
 
-          URL is NOT reachable.
+          The monitored URL is NOT reachable.
 
-          URL: https://example.com
-          Repo: $GITHUB_REPOSITORY
+          URL: https://test.com
+          Repository: $GITHUB_REPOSITORY
+          Workflow: $GITHUB_WORKFLOW
           Run ID: $GITHUB_RUN_ID
           Time: $(date)
           " | mail -s "🚨 URL Down Alert" ${{ secrets.MAIL_TO }}
+
+      # -------------------------
+      # 5. Debug (optional)
+      # -------------------------
+      - name: Debug status
+        run: |
+          echo "Final URL_DOWN value = $URL_DOWN"
