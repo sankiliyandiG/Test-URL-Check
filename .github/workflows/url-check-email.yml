@@ -1,0 +1,61 @@
+name: URL Health Check (Send From My Email)
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check-url:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install mail tools
+        run: |
+          # sudo apt-get update 
+          sudo apt-get install -y msmtp mailutils
+
+      - name: Configure msmtp
+        run: |
+          cat <<EOF > ~/.msmtprc
+          defaults
+          auth           on
+          tls            on
+          tls_trust_file /etc/ssl/certs/ca-certificates.crt
+          logfile        ~/.msmtp.log
+
+          account default
+          host ${{ secrets.SMTP_SERVER }}
+          port ${{ secrets.SMTP_PORT }}
+          from ${{ secrets.SMTP_USER }}
+          user ${{ secrets.SMTP_USER }}
+          password ${{ secrets.SMTP_PASS }}
+          EOF
+
+          chmod 600 ~/.msmtprc
+
+      - name: Check URL
+        run: |
+          URL="https://enia-spitefire-uat.ogondigital.com"
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}" --connect-timeout 10 "$URL")
+
+          echo "HTTP Status: $STATUS"
+
+          if [ "$STATUS" -lt 200 ] || [ "$STATUS" -ge 400 ]; then
+            echo "URL_DOWN=true" >> $GITHUB_ENV
+          else
+            echo "URL_DOWN=false" >> $GITHUB_ENV
+          fi
+
+      - name: Send mail if URL is down
+        if: env.URL_DOWN == 'true'
+        run: |
+          echo "🚨 ALERT 🚨
+
+          URL is NOT reachable.
+
+          URL: https://example.com
+          Repo: $GITHUB_REPOSITORY
+          Run ID: $GITHUB_RUN_ID
+          Time: $(date)
+          " | mail -s "🚨 URL Down Alert" ${{ secrets.MAIL_TO }}
