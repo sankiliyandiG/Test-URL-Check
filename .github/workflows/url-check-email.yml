@@ -47,7 +47,7 @@ jobs:
       # -------------------------
       - name: Check URL
         run: |
-          URL="https://enia-spitfire.ogondigital.com"
+          URL="enia-spitefire-uat.ogondigital.com"
 
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             --connect-timeout 10 "$URL" || true)
@@ -75,7 +75,7 @@ jobs:
 
           The monitored URL is NOT reachable.
 
-          URL: https://enia-spitfire.ogondigital.com
+          URL: enia-spitefire-uat.ogondigital.com
           Repository: $GITHUB_REPOSITORY
           Workflow: $GITHUB_WORKFLOW
           Run ID: $GITHUB_RUN_ID
