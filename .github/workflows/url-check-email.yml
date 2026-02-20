@@ -3,7 +3,7 @@ name: URL Health Check
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/10 * * * *"  # every 10 minutes
+    - cron: "0 9 * * *"  # every 10 minutes
 
 jobs:
   check-url:
@@ -47,7 +47,7 @@ jobs:
       # -------------------------
       - name: Check URL
         run: |
-          URL="enia-spitefire-uat.ogondigital.com"
+          URL=""
 
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             --connect-timeout 10 "$URL" || true)
