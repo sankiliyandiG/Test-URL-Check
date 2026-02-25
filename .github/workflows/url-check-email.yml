@@ -3,7 +3,7 @@ name: URL Health Check
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 9 * * *"  # every 10 minutes
+    - cron: "*/10 * * * *"  # every 10 minutes
 
 jobs:
   check-url:
@@ -47,7 +47,7 @@ jobs:
       # -------------------------
       - name: Check URL
         run: |
-          URL=""
+          URL="enia-spitefire-uat.ogondigital.com:8080"
 
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             --connect-timeout 10 "$URL" || true)
@@ -59,10 +59,10 @@ jobs:
 
           echo "HTTP Status: $STATUS"
 
-          if [ "$STATUS" = "DOWN" ] || [ "$STATUS" -ge 400 ]; then
-            echo "URL_DOWN=true" >> $GITHUB_ENV
-          else
+          if [ "$STATUS" -eq 200 ]; then
             echo "URL_DOWN=false" >> $GITHUB_ENV
+          else
+            echo "URL_DOWN=true" >> $GITHUB_ENV
           fi
 
       # -------------------------
