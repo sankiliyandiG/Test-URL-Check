@@ -47,7 +47,8 @@ jobs:
       # -------------------------
       - name: Check URL
         run: |
-          URL="http://44.216.75.159"
+          URL="enia-spitfire.ogondigital.com:8080"
+          echo "MONITORED_URL=$TARGET_URL" >> $GITHUB_ENV
 
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             --connect-timeout 10 "$URL" || true)
@@ -75,7 +76,7 @@ jobs:
 
           The monitored URL is NOT reachable.
 
-          URL: enia-spitefire-uat.ogondigital.com
+          URL: env.MONITORED_URL
           Repository: $GITHUB_REPOSITORY
           Workflow: $GITHUB_WORKFLOW
           Run ID: $GITHUB_RUN_ID
