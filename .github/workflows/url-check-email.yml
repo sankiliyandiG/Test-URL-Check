@@ -76,7 +76,7 @@ jobs:
 
           The monitored URL is NOT reachable.
 
-          URL: env.MONITORED_URL
+          URL: {{ env.MONITORED_URL }}
           Repository: $GITHUB_REPOSITORY
           Workflow: $GITHUB_WORKFLOW
           Run ID: $GITHUB_RUN_ID
