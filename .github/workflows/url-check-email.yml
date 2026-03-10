@@ -49,8 +49,10 @@ jobs:
         run: |
           URL="enia-spitfire.ogondigital.com:8080"
           
-          STATUS=$(curl -L -s -o /dev/null -w "%{http_code}" \
+          STATUS=$(curl -K -L -s -o /dev/null -w "%{http_code}" \
             --connect-timeout 10 "$URL" || true)
+
+          echo "STATUS=$STATUS"
 
           # Normalize curl failures
           if [ -z "$STATUS" ] || [ "$STATUS" = "000" ]; then
