@@ -47,7 +47,7 @@ jobs:
       # -------------------------
       - name: Check URL
         run: |
-          URL="enia-spitefire-uat.ogondigital.com:8080"
+          URL="enia-spitfire.ogondigital.com:8080"
           
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             --connect-timeout 10 "$URL" || true)
