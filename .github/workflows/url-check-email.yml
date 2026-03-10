@@ -49,7 +49,7 @@ jobs:
         run: |
           URL="enia-spitfire.ogondigital.com:8080"
           
-          STATUS=$(curl -K -L -s -o /dev/null -w "%{http_code}" \
+          STATUS=$(curl -k -L -s -o /dev/null -w "%{http_code}" \
             --connect-timeout 10 "$URL" || true)
 
           echo "STATUS=$STATUS"
