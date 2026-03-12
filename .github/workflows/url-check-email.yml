@@ -50,8 +50,8 @@ jobs:
         run: |
           URL="enia-spitfire.ogondigital.com:8080"
           echo "URL: $URL"
-          curl -v -L -A "Mozilla/5.0" "$URL"
-          STATUS=$(curl -k -L -s -A "Mozilla/5.0" -o /dev/null -w "%{http_code}" \
+          # curl -v -L -A "Mozilla/5.0" "$URL"
+          STATUS=$(curl -k -L -s -o /dev/null -w "%{http_code}" \
             --connect-timeout 10 --max-time 20 "$URL" || true)
           echo "STATUSs=$STATUS"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
