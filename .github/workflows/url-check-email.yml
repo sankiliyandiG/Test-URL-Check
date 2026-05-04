@@ -1,99 +1,99 @@
-name: URL Health Check
+# name: URL Health Check
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 0 * * *"  # every 10 minutes
+# on:
+#   workflow_dispatch:
+#   schedule:
+#     #- cron: "0 0 * * *"  # every 10 minutes
 
-jobs:
-  check-url:
-    runs-on: ubuntu-latest
+# jobs:
+#   check-url:
+#     runs-on: ubuntu-latest
 
-    steps:
-      # -------------------------
-      # 1. Install mail tools
-      # -------------------------
-      - name: Install mail tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y msmtp mailutils
-          # 🔴 CRITICAL FIX: link msmtp as sendmail
-          sudo ln -sf /usr/bin/msmtp /usr/sbin/sendmail
+#     steps:
+#       # -------------------------
+#       # 1. Install mail tools
+#       # -------------------------
+#       - name: Install mail tools
+#         run: |
+#           sudo apt-get update
+#           sudo apt-get install -y msmtp mailutils
+#           # 🔴 CRITICAL FIX: link msmtp as sendmail
+#           sudo ln -sf /usr/bin/msmtp /usr/sbin/sendmail
 
-      # -------------------------
-      # 2. Configure msmtp
-      # -------------------------
-      - name: Configure msmtp
-        run: |
-          cat <<EOF > ~/.msmtprc
-          defaults
-          auth           on
-          tls            on
-          tls_trust_file /etc/ssl/certs/ca-certificates.crt
-          logfile        ~/.msmtp.log
+#       # -------------------------
+#       # 2. Configure msmtp
+#       # -------------------------
+#       - name: Configure msmtp
+#         run: |
+#           cat <<EOF > ~/.msmtprc
+#           defaults
+#           auth           on
+#           tls            on
+#           tls_trust_file /etc/ssl/certs/ca-certificates.crt
+#           logfile        ~/.msmtp.log
 
-          account default
-          host ${{ secrets.SMTP_SERVER }}
-          port ${{ secrets.SMTP_PORT }}
-          from ${{ secrets.SMTP_USER }}
-          user ${{ secrets.SMTP_USER }}
-          password ${{ secrets.SMTP_PASS }}
-          EOF
+#           account default
+#           host ${{ secrets.SMTP_SERVER }}
+#           port ${{ secrets.SMTP_PORT }}
+#           from ${{ secrets.SMTP_USER }}
+#           user ${{ secrets.SMTP_USER }}
+#           password ${{ secrets.SMTP_PASS }}
+#           EOF
 
-          chmod 600 ~/.msmtprc
+#           chmod 600 ~/.msmtprc
 
-      # -------------------------
-      # 3. Check URL (SAFE LOGIC)
-      # -------------------------
+#       # -------------------------
+#       # 3. Check URL (SAFE LOGIC)
+#       # -------------------------
       
-      - name: Check URL
-        run: |
-          URL="enia-spitfire.ogondigital.com:8080"
-          echo "URL: $URL"
-          # curl -v -L -A "Mozilla/5.0" "$URL"
-          STATUS=$(curl -k -L -s -o /dev/null -w "%{http_code}" \
-            --connect-timeout 10 --max-time 20 "$URL" || true)
-          echo "STATUSs=$STATUS"
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            --connect-timeout 10 --max-time 20 "$URL" || true)
+#       - name: Check URL
+#         run: |
+#           URL="enia-spitfire.ogondigital.com:8080"
+#           echo "URL: $URL"
+#           # curl -v -L -A "Mozilla/5.0" "$URL"
+#           STATUS=$(curl -k -L -s -o /dev/null -w "%{http_code}" \
+#             --connect-timeout 10 --max-time 20 "$URL" || true)
+#           echo "STATUSs=$STATUS"
+#           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+#             --connect-timeout 10 --max-time 20 "$URL" || true)
 
-          echo "STATUS=$STATUS"
+#           echo "STATUS=$STATUS"
 
-          # Normalize curl failures
-          if [ -z "$STATUS" ] || [ "$STATUS" = "000" ]; then
-            STATUS="DOWN"
-          fi
+#           # Normalize curl failures
+#           if [ -z "$STATUS" ] || [ "$STATUS" = "000" ]; then
+#             STATUS="DOWN"
+#           fi
 
-          echo "HTTP Status: $STATUS"
+#           echo "HTTP Status: $STATUS"
 
-          if [ "$STATUS" -eq 200 ]; then
-            echo "URL_DOWN=false" >> $GITHUB_ENV
-          else
-            echo "URL_DOWN=true" >> $GITHUB_ENV
-          fi
+#           if [ "$STATUS" -eq 200 ]; then
+#             echo "URL_DOWN=false" >> $GITHUB_ENV
+#           else
+#             echo "URL_DOWN=true" >> $GITHUB_ENV
+#           fi
 
-      # -------------------------
-      # 4. Send Email if URL is Down
-      # -------------------------
-      - name: Send mail if URL is down
-        if: always() && env.URL_DOWN == 'true'
-        run: |
-          echo "🚨 URL DOWN ALERT 🚨
+#       # -------------------------
+#       # 4. Send Email if URL is Down
+#       # -------------------------
+#       - name: Send mail if URL is down
+#         if: always() && env.URL_DOWN == 'true'
+#         run: |
+#           echo "🚨 URL DOWN ALERT 🚨
 
-          The monitored URL is NOT reachable.
+#           The monitored URL is NOT reachable.
 
-          URL: enia-spitefire-uat.ogondigital.com
-          Repository: $GITHUB_REPOSITORY
-          Workflow: $GITHUB_WORKFLOW
-          Run ID: $GITHUB_RUN_ID
-          Time: $(date)
-          " | mail -s "🚨 URL Down Alert" ${{ secrets.MAIL_TO }}
+#           URL: enia-spitefire-uat.ogondigital.com
+#           Repository: $GITHUB_REPOSITORY
+#           Workflow: $GITHUB_WORKFLOW
+#           Run ID: $GITHUB_RUN_ID
+#           Time: $(date)
+#           " | mail -s "🚨 URL Down Alert" ${{ secrets.MAIL_TO }}
 
-      # -------------------------
-      # 5. Debug (optional but useful)
-      # -------------------------
-      - name: Debug status
-        run: |
-          echo "Final URL_DOWN value = $URL_DOWN"
-          echo "---- msmtp log ----"
-          cat ~/.msmtp.log || true
+#       # -------------------------
+#       # 5. Debug (optional but useful)
+#       # -------------------------
+#       - name: Debug status
+#         run: |
+#           echo "Final URL_DOWN value = $URL_DOWN"
+#           echo "---- msmtp log ----"
+#           cat ~/.msmtp.log || true
